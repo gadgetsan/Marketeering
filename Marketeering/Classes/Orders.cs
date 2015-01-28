@@ -102,13 +102,13 @@ namespace MouseKeyboardActivityMonitor.Demo
 
         public void reduceDisplacement()
         {
-            Automation.mouseClick(new Point(START_POINT.X + WINDOW.X - 5, START_POINT.Y + 5));
+            Automation.I.mouseClick(new Point(START_POINT.X + WINDOW.X - 5, START_POINT.Y + 5));
             displacement -= SCROLL_DELTA;
         }
 
         public void augmentDisplacement()
         {
-            Automation.mouseClick(new Point(START_POINT.X + WINDOW.X - 5, START_POINT.Y + WINDOW.Y - 5));
+            Automation.I.mouseClick(new Point(START_POINT.X + WINDOW.X - 5, START_POINT.Y + WINDOW.Y - 5));
             displacement += SCROLL_DELTA;
         }
 
@@ -116,38 +116,38 @@ namespace MouseKeyboardActivityMonitor.Demo
         {
             //Automation.mouseMove(START_POINT);
             int locationInWindow = CalculateElementPosition(element);
-            Automation.mouseClick(new Point(START_POINT.X + 5, START_POINT.Y + locationInWindow));
+            Automation.I.mouseClick(new Point(START_POINT.X + 5, START_POINT.Y + locationInWindow));
         }
 
         public void modifyOrderSpecificElement(int element)
         {
             int locationInWindow = CalculateElementPosition(element);
-            Automation.mouseClick(new Point(START_POINT.X + 5, START_POINT.Y + locationInWindow));
-            Automation.rightMouseClick(new Point(START_POINT.X + 5, START_POINT.Y + locationInWindow));
-            Automation.mouseClick(new Point(START_POINT.X + 25, START_POINT.Y + locationInWindow + 5));
+            Automation.I.mouseClick(new Point(START_POINT.X + 5, START_POINT.Y + locationInWindow));
+            Automation.I.rightMouseClick(new Point(START_POINT.X + 5, START_POINT.Y + locationInWindow));
+            Automation.I.mouseClick(new Point(START_POINT.X + 25, START_POINT.Y + locationInWindow + 5));
         }
         public void exportMarketForSpecificElement(int element)
         {
             int locationInWindow = CalculateElementPosition(element);
-            Automation.mouseClick(new Point(START_POINT.X + 5, START_POINT.Y + locationInWindow));
-            Automation.rightMouseClick(new Point(START_POINT.X + 5, START_POINT.Y + locationInWindow));
-            Automation.mouseClick(new Point(START_POINT.X + 25, START_POINT.Y + locationInWindow + 60));
+            Automation.I.mouseClick(new Point(START_POINT.X + 5, START_POINT.Y + locationInWindow));
+            Automation.I.rightMouseClick(new Point(START_POINT.X + 5, START_POINT.Y + locationInWindow));
+            Automation.I.mouseClick(new Point(START_POINT.X + 25, START_POINT.Y + locationInWindow + 60));
             System.Threading.Thread.Sleep(1000);
-            Automation.mouseClick(EXPORT_TO_FILE);
+            Automation.I.mouseClick(EXPORT_TO_FILE);
             System.Threading.Thread.Sleep(1000);
-            Automation.mouseClick(MY_ORDERS);
+            Automation.I.mouseClick(MY_ORDERS);
         }
 
         public void leftClickOnEachElements(){
 
             Point currentClick = new Point(this.START_POINT.X + 10, this.START_POINT.Y + ROW_HEIGHT / 2);
-            Automation.mouseClick(currentClick);
+            Automation.I.mouseClick(currentClick);
             while (currentClick.Y < (this.WINDOW.Y+this.START_POINT.Y))
             {
-                Automation.smoothMouseMoveTo(new Point(100, 100));
+                Automation.I.mouseMove(new Point(100, 100));
                 currentClick.Y += this.ROW_HEIGHT;
                 //MessageBox.Show("X: " + currentClick.X + ", Y: " + currentClick.Y);
-                Automation.mouseClick(currentClick);
+                Automation.I.mouseClick(currentClick);
             }
         }
 
