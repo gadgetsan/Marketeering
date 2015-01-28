@@ -5,10 +5,8 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Windows.Forms;
 using Microsoft.VisualBasic.FileIO;
 using System.Globalization;
-using System.Runtime.InteropServices;
 
 namespace MouseKeyboardActivityMonitor.Demo
 {
@@ -17,10 +15,10 @@ namespace MouseKeyboardActivityMonitor.Demo
 
         int ROW_HEIGHT = 20;
         int SCROLL_DELTA = 38;
-        Point WINDOW = new Point(1295, 262);
-        Point START_POINT = new Point(2226, 310);
-        Point EXPORT_TO_FILE = new Point(2941, 1066);
-        Point MY_ORDERS = new Point(2266, 0056);
+        Point WindowTop = new Point(1295, 262);
+        Point StartPoint = new Point(2226, 310);
+        Point ExportToFileLocation = new Point(2941, 1066);
+        Point MyOrdersLocation = new Point(2266, 0056);
         int displacement = 0;
         bool isSellOrders;
 
@@ -29,8 +27,15 @@ namespace MouseKeyboardActivityMonitor.Demo
         public Orders(bool isSellOrders)
         {
             this.isSellOrders = isSellOrders;
-            fetchOrdersList();
 
+            setupCoordinates();
+
+            fetchOrdersList();
+        }
+
+        public void setupCoordinates()
+        {
+            //en fait ce qu'on fait ici c'est qu'on setup les emplacement des différents items
         }
 
         public void fetchOrdersList()
@@ -68,11 +73,11 @@ namespace MouseKeyboardActivityMonitor.Demo
             if (newPrice > 0)
             {
                 modifyOrderSpecificElement(element);
-                SendKeys.SendWait(newPrice.ToString().Replace(',', '.'));
+                Automation.I.Send(newPrice.ToString().Replace(',', '.'));
                 System.Threading.Thread.Sleep(500);
-                SendKeys.SendWait("{Tab}");
+                Automation.I.Send("{Tab}");
                 //System.Threading.Thread.Sleep(60000);
-                SendKeys.SendWait("{Enter}");
+                Automation.I.Send("{Enter}");
                 orders.ElementAt(element).orderAmmount = newPrice;
             }
             //exportOrdersForSpecificElement(element);
@@ -83,7 +88,7 @@ namespace MouseKeyboardActivityMonitor.Demo
             int relativeElementLocation = ROW_HEIGHT/2 + ROW_HEIGHT*element;
             //MessageBox.Show("currentClick.Y: " + currentClick.Y + ", MAX: " + (this.WINDOW.Y + this.START_POINT.Y));
             //on va aller voir si ce clique serait à l'extérieur de la liste, si oui on va scroll down
-            while (relativeElementLocation < displacement || relativeElementLocation > displacement + WINDOW.Y)
+            while (relativeElementLocation < displacement || relativeElementLocation > displacement + WindowTop.Y)
             {
                 //le cas ou cet élément est en haut
                 if (relativeElementLocation < displacement)
@@ -91,7 +96,7 @@ namespace MouseKeyboardActivityMonitor.Demo
                     //si il est en haut, on réduit le déplacement
                     reduceDisplacement();
                 }
-                else if (relativeElementLocation > displacement + WINDOW.Y)
+                else if (relativeElementLocation > displacement + WindowTop.Y)
                 {
                     augmentDisplacement();
                 }
@@ -102,13 +107,13 @@ namespace MouseKeyboardActivityMonitor.Demo
 
         public void reduceDisplacement()
         {
-            Automation.I.mouseClick(new Point(START_POINT.X + WINDOW.X - 5, START_POINT.Y + 5));
+            Automation.I.mouseClick(new Point(StartPoint.X + WindowTop.X - 5, StartPoint.Y + 5));
             displacement -= SCROLL_DELTA;
         }
 
         public void augmentDisplacement()
         {
-            Automation.I.mouseClick(new Point(START_POINT.X + WINDOW.X - 5, START_POINT.Y + WINDOW.Y - 5));
+            Automation.I.mouseClick(new Point(StartPoint.X + WindowTop.X - 5, StartPoint.Y + WindowTop.Y - 5));
             displacement += SCROLL_DELTA;
         }
 
@@ -116,33 +121,31 @@ namespace MouseKeyboardActivityMonitor.Demo
         {
             //Automation.mouseMove(START_POINT);
             int locationInWindow = CalculateElementPosition(element);
-            Automation.I.mouseClick(new Point(START_POINT.X + 5, START_POINT.Y + locationInWindow));
+            Automation.I.mouseClick(new Point(StartPoint.X + 5, StartPoint.Y + locationInWindow));
         }
 
         public void modifyOrderSpecificElement(int element)
         {
             int locationInWindow = CalculateElementPosition(element);
-            Automation.I.mouseClick(new Point(START_POINT.X + 5, START_POINT.Y + locationInWindow));
-            Automation.I.rightMouseClick(new Point(START_POINT.X + 5, START_POINT.Y + locationInWindow));
-            Automation.I.mouseClick(new Point(START_POINT.X + 25, START_POINT.Y + locationInWindow + 5));
+            Automation.I.mouseClick(new Point(StartPoint.X + 5, StartPoint.Y + locationInWindow));
+            Automation.I.rightMouseClick(new Point(StartPoint.X + 5, StartPoint.Y + locationInWindow));
+            Automation.I.mouseClick(new Point(StartPoint.X + 25, StartPoint.Y + locationInWindow + 5));
         }
         public void exportMarketForSpecificElement(int element)
         {
             int locationInWindow = CalculateElementPosition(element);
-            Automation.I.mouseClick(new Point(START_POINT.X + 5, START_POINT.Y + locationInWindow));
-            Automation.I.rightMouseClick(new Point(START_POINT.X + 5, START_POINT.Y + locationInWindow));
-            Automation.I.mouseClick(new Point(START_POINT.X + 25, START_POINT.Y + locationInWindow + 60));
-            System.Threading.Thread.Sleep(1000);
-            Automation.I.mouseClick(EXPORT_TO_FILE);
-            System.Threading.Thread.Sleep(1000);
-            Automation.I.mouseClick(MY_ORDERS);
+            Automation.I.mouseClick(new Point(StartPoint.X + 5, StartPoint.Y + locationInWindow));
+            Automation.I.rightMouseClick(new Point(StartPoint.X + 5, StartPoint.Y + locationInWindow));
+            Automation.I.mouseClick(new Point(StartPoint.X + 25, StartPoint.Y + locationInWindow + 60));
+            Automation.I.mouseClick(ExportToFileLocation);
+            Automation.I.mouseClick(MyOrdersLocation);
         }
 
         public void leftClickOnEachElements(){
 
-            Point currentClick = new Point(this.START_POINT.X + 10, this.START_POINT.Y + ROW_HEIGHT / 2);
+            Point currentClick = new Point(this.StartPoint.X + 10, this.StartPoint.Y + ROW_HEIGHT / 2);
             Automation.I.mouseClick(currentClick);
-            while (currentClick.Y < (this.WINDOW.Y+this.START_POINT.Y))
+            while (currentClick.Y < (this.WindowTop.Y+this.StartPoint.Y))
             {
                 Automation.I.mouseMove(new Point(100, 100));
                 currentClick.Y += this.ROW_HEIGHT;
@@ -204,14 +207,11 @@ namespace MouseKeyboardActivityMonitor.Demo
             modifyOrderSpecificElement(element);
 
             System.Threading.Thread.Sleep(1000);
-            for (int i = 0; i < 50; i++)
-            {
-                SendKeys.SendWait("^c");
-            }
+            Automation.I.Copy();
             System.Threading.Thread.Sleep(1000);
 
             //MessageBox.Show("cb: " + Clipboard.GetText());
-            string cbString = Clipboard.GetText();
+            string cbString = Automation.I.GetClipboard();
             double toReturn = 0;
             try
             {
@@ -222,8 +222,8 @@ namespace MouseKeyboardActivityMonitor.Demo
                 return 0;
             }
 
-            SendKeys.SendWait("{Tab 2}");
-            SendKeys.SendWait("{Enter}");
+            Automation.I.Send("{Tab 2}");
+            Automation.I.Send("{Enter}");
             return toReturn;
         }
 

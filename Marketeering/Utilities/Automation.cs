@@ -32,9 +32,23 @@ namespace MouseKeyboardActivityMonitor.Demo.Classes
             autoIT.MouseClick("primary", location.X, location.Y, 1);
         }
 
+        public void Send(string text)
+        {
+            autoIT.Send(text);
+        }
+
+        public void Copy()
+        {
+            autoIT.Send("^c");
+        }
+
+        public string GetClipboard()
+        {
+            return autoIT.ClipGet();
+        }
+
         public void rightMouseClick(Point location)
         {
-
             autoIT.MouseClick("secondary", location.X, location.Y, 1);
         }
 
