@@ -38,5 +38,10 @@ namespace Marketeering
                 //MessageBox.Show("Ceci est un message qui devrais arrivé avant la notification");
             }).Start();
         }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+
+        }
     }
 }

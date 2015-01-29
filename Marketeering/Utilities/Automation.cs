@@ -51,9 +51,16 @@ namespace MouseKeyboardActivityMonitor.Demo.Classes
             autoIT.Send("^c");
         }
 
-        public string GetClipboard()
+        public void EmptyClipboard()
         {
             System.Threading.Thread.Sleep(500);
+            autoIT.ClipPut("0");
+            return;
+        }
+
+        public string GetClipboard()
+        {
+            System.Threading.Thread.Sleep(1000);
             return autoIT.ClipGet();
         }
 

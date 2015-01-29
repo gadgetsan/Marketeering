@@ -45,10 +45,13 @@ namespace MouseKeyboardActivityMonitor.Demo
             double lastOrderCurrentPrice = 0;
             int index = 0;
             double orderAmmount = getOrderAmmountForSpecificElement(index);
+            //si on a un 0, ça veux dire que c'est vide!
+            if (orderAmmount < 0.01)
+                return;
             orders.Add(new OrderElement(orderAmmount, isSellOrders));
 
             //on va aller lire tout les montants de vente
-            while (orderAmmount != lastOrderCurrentPrice && orderAmmount != 0.0 && index < 10)
+            while (orderAmmount != lastOrderCurrentPrice && orderAmmount > 0.0 && index < 10)
             {
                 index++;
                 lastOrderCurrentPrice = orderAmmount;
@@ -77,6 +80,7 @@ namespace MouseKeyboardActivityMonitor.Demo
         {
             //on va commencer par aller voir combien on met comme montant
             exportOrdersForSpecificElement(element);
+
             double newPrice = orders.ElementAt(element).getUpdatedPrice();
             //MessageBox.Show("nouveau prix proposé: " + newPrice);
 
@@ -86,7 +90,7 @@ namespace MouseKeyboardActivityMonitor.Demo
             Automation.I.Copy();
             var currentValue = double.Parse(Automation.I.GetClipboard());
 
-            if (Math.Abs(currentValue - orders.ElementAt(element).orderAmmount) > 0.05)
+            if (Math.Abs(currentValue - orders.ElementAt(element).orderAmmount) > 0.005)
             {
                 allSoldIndexes.Add(element);
                 return false;
@@ -235,6 +239,9 @@ namespace MouseKeyboardActivityMonitor.Demo
 
         public double getOrderAmmountForSpecificElement(int element)
         {
+            //avant tout, on va vider le clipboard
+            Automation.I.EmptyClipboard();
+            
             modifyOrderSpecificElement(element);
 
             Automation.I.Copy();
