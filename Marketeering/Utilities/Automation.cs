@@ -22,33 +22,44 @@ namespace MouseKeyboardActivityMonitor.Demo.Classes
                 if (instance == null)
                 {
                     instance = new Automation();
+                    instance.init();
                 }
                 return instance;
             }
         }
 
+        private void init()
+        {
+            autoIT.Opt("SendKeyDelay", 250);
+        }
+
         public void mouseClick(Point location){
 
+            System.Threading.Thread.Sleep(500);
             autoIT.MouseClick("primary", location.X, location.Y, 1);
         }
 
         public void Send(string text)
         {
+            System.Threading.Thread.Sleep(100);
             autoIT.Send(text);
         }
 
         public void Copy()
         {
+            System.Threading.Thread.Sleep(100);
             autoIT.Send("^c");
         }
 
         public string GetClipboard()
         {
+            System.Threading.Thread.Sleep(500);
             return autoIT.ClipGet();
         }
 
         public void rightMouseClick(Point location)
         {
+            System.Threading.Thread.Sleep(500);
             autoIT.MouseClick("secondary", location.X, location.Y, 1);
         }
 

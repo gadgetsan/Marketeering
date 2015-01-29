@@ -16,18 +16,20 @@ namespace MouseKeyboardActivityMonitor.Demo
         int ROW_HEIGHT = 20;
         int SCROLL_DELTA = 38;
         Point WindowTop = new Point(1295, 262);
-        Point StartPoint = new Point(2226, 310);
+        Point StartPoint;
         Point ExportToFileLocation = new Point(2941, 1066);
         Point MyOrdersLocation = new Point(2266, 0056);
         int displacement = 0;
         bool isSellOrders;
+        List<int> allSoldIndexes = new List<int>();
 
         List<OrderElement> orders = new List<OrderElement>();
 
-        public Orders(bool isSellOrders)
+        public Orders(bool isSellOrders, Point coords)
         {
             this.isSellOrders = isSellOrders;
 
+            this.StartPoint = coords;
             setupCoordinates();
 
             fetchOrdersList();
@@ -61,25 +63,51 @@ namespace MouseKeyboardActivityMonitor.Demo
         public void updateSales()
         {
             for (int i = 0; i < orders.Count(); i++)
-                updateSale(i);
+            {
+                while (!updateSale(i))
+                {
+                    //on enleve l'élément en trop et on recommence
+                    orders.RemoveAt(i);
+                }
+            }
+            return;
         }
 
-        public void updateSale(int element)
+        public bool updateSale(int element)
         {
             //on va commencer par aller voir combien on met comme montant
             exportOrdersForSpecificElement(element);
             double newPrice = orders.ElementAt(element).getUpdatedPrice();
             //MessageBox.Show("nouveau prix proposé: " + newPrice);
+
+            modifyOrderSpecificElement(element);
+
+            //avant, on va aller voir si le prix est le même que celui en memoire, si non ça veux dire que cet item à terminé d'être vendu, on le supprime
+            Automation.I.Copy();
+            var currentValue = double.Parse(Automation.I.GetClipboard());
+
+            if (Math.Abs(currentValue - orders.ElementAt(element).orderAmmount) > 0.05)
+            {
+                allSoldIndexes.Add(element);
+                return false;
+            }
+
             if (newPrice > 0)
             {
-                modifyOrderSpecificElement(element);
                 Automation.I.Send(newPrice.ToString().Replace(',', '.'));
-                System.Threading.Thread.Sleep(500);
                 Automation.I.Send("{Tab}");
-                //System.Threading.Thread.Sleep(60000);
+                Automation.I.Send("{Enter}");
+                Automation.I.Send("{Tab}");
                 Automation.I.Send("{Enter}");
                 orders.ElementAt(element).orderAmmount = newPrice;
             }
+            else
+            {
+                Automation.I.Send("{Tab}");
+                Automation.I.Send("{Tab}");
+                Automation.I.Send("{Enter}");
+            }
+            return true;
             //exportOrdersForSpecificElement(element);
         }
 
@@ -137,8 +165,11 @@ namespace MouseKeyboardActivityMonitor.Demo
             Automation.I.mouseClick(new Point(StartPoint.X + 5, StartPoint.Y + locationInWindow));
             Automation.I.rightMouseClick(new Point(StartPoint.X + 5, StartPoint.Y + locationInWindow));
             Automation.I.mouseClick(new Point(StartPoint.X + 25, StartPoint.Y + locationInWindow + 60));
+            System.Threading.Thread.Sleep(3000);
             Automation.I.mouseClick(ExportToFileLocation);
+            System.Threading.Thread.Sleep(1000);
             Automation.I.mouseClick(MyOrdersLocation);
+            System.Threading.Thread.Sleep(1000);
         }
 
         public void leftClickOnEachElements(){
@@ -206,9 +237,7 @@ namespace MouseKeyboardActivityMonitor.Demo
         {
             modifyOrderSpecificElement(element);
 
-            System.Threading.Thread.Sleep(1000);
             Automation.I.Copy();
-            System.Threading.Thread.Sleep(1000);
 
             //MessageBox.Show("cb: " + Clipboard.GetText());
             string cbString = Automation.I.GetClipboard();
