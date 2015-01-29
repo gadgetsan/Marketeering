@@ -23,7 +23,7 @@ namespace MouseKeyboardActivityMonitor.Demo.Classes
             double proposedPrice = 0;
             //on va ordonner les données importés pour avoir seulement ceux de la station (Jita)
             if(isSellOrder){
-                ObjectOtherOrders lowestPrice = latestExportedData.Where(i => i.jumps == 0 && i.bid == false).OrderByDescending(i => i.price).First();
+                ObjectOtherOrders lowestPrice = latestExportedData.Where(i => i.jumps == 0 && i.bid == false).OrderBy(i => i.price).First();
                 //on regarde la différence entre les deux prix pour ne pas se faire avoir
                 if (lowestPrice.price < orderAmmount)
                 {
