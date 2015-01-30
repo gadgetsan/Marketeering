@@ -15,6 +15,7 @@ namespace Marketeering
 {
     public partial class Form1 : Form
     {
+        Thread botThread;
         public Form1()
         {
             InitializeComponent();
@@ -22,26 +23,26 @@ namespace Marketeering
 
         private void button1_Click(object sender, EventArgs e)
         {
-            new Thread(delegate()
+            botThread = new Thread(delegate()
             {
-                Orders sellOrders = new Orders(true, new Point(2222, 88));
-                Orders buyOrders = new Orders(false, new Point(2222, 524));
+                Orders Orders = new Orders(new Point(2222, 524), new Point(2222, 88));
                 Random rnd = new Random();
                 while (true)
                 {
                     Notifier.I.Notify("Marketeering", "Nouvelle phase commencée");
-                    sellOrders.updateSales();
-                    buyOrders.updateSales();
+                    Orders.updateSales();
                     System.Threading.Thread.Sleep(60000 * 5 + rnd.Next(1, 60000));
                 }
                 //
                 //MessageBox.Show("Ceci est un message qui devrais arrivé avant la notification");
-            }).Start();
+            });
+
+            botThread.Start();
         }
 
         private void button2_Click(object sender, EventArgs e)
         {
-
+            botThread.Abort();
         }
     }
 }

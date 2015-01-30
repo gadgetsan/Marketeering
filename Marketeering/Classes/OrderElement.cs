@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Marketeering.Utilities;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,16 +10,16 @@ namespace MouseKeyboardActivityMonitor.Demo.Classes
     {
         public bool isSellOrder;
         public double orderAmmount;
-        public string elementName;
         public List<ObjectOtherOrders> latestExportedData;
+        public string orderId;
 
-        public OrderElement(double currentAmmount, bool isSellOrder)
+        public OrderElement(double currentAmmount, bool isBuyOrder)
         {
-            this.isSellOrder = isSellOrder;
+            this.isSellOrder = !isBuyOrder;
             this.orderAmmount = currentAmmount;
         }
 
-        public double getUpdatedPrice()
+        public double getUpdatedPrice(List<ObjectOtherOrders> latestExportedData)
         {
             double proposedPrice = 0;
             //on va ordonner les données importés pour avoir seulement ceux de la station (Jita)
@@ -34,6 +35,7 @@ namespace MouseKeyboardActivityMonitor.Demo.Classes
                 //on regarde la différence entre les deux prix pour ne pas se faire avoir
                 if (highestPrice.price > orderAmmount)
                 {
+                    //Notifier.I.Notify()
                     proposedPrice = highestPrice.price + 0.01;
                 }
             }

@@ -66,46 +66,90 @@ namespace Marketeering.Utilities
 
         }
 
+        public void SendMessage(string title, string text)
+        {
+            new Thread(delegate()
+            {
+                try
+                {
+                    WebRequest request = WebRequest.Create("https://api.pushbullet.com/v2/pushes");
+                    request.Credentials = new NetworkCredential(key, "");
+                    request.ContentType = "application/json; charset=UTF-8";
+                    request.Method = "POST";
+
+
+
+                    string postData = "{\"type\": \"note\", \"title\": \"" + title + "\", \"body\": \"" + text + "\"}";
+                    byte[] byteArray = Encoding.UTF8.GetBytes(postData);
+                    request.ContentLength = byteArray.Length;
+                    Stream dataStream = request.GetRequestStream();
+                    dataStream.Write(byteArray, 0, byteArray.Length);
+                    dataStream.Close();
+                    //on créé et envoie le push
+
+                    WebResponse response = request.GetResponse();
+                    dataStream = response.GetResponseStream();
+                    StreamReader reader = new StreamReader(dataStream);
+                    // Read the content.
+                    string responseFromServer = reader.ReadToEnd();
+                    JObject master = JObject.Parse(responseFromServer);
+                    string iden = master["iden"].ToString();
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("Lol, Exception while sending pushbullet: " + e.ToString());
+                }
+                
+            }).Start();
+        }
+
         public void Notify(string title, string text){
             //l'envoie d'une notification démarre toujours sur un autre thread parce qu'on ne veut pas bloquer le reste de l'application
 
             new Thread(delegate()
             {
-                WebRequest request = WebRequest.Create("https://api.pushbullet.com/v2/pushes");
-                request.Credentials = new NetworkCredential(key, "");
-                request.ContentType = "application/json; charset=UTF-8";
-                request.Method = "POST";
+                try
+                {
+                    WebRequest request = WebRequest.Create("https://api.pushbullet.com/v2/pushes");
+                    request.Credentials = new NetworkCredential(key, "");
+                    request.ContentType = "application/json; charset=UTF-8";
+                    request.Method = "POST";
 
 
 
-                string postData = "{\"type\": \"note\", \"title\": \"" + title + "\", \"body\": \"" + text + "\"}";
-                byte[] byteArray = Encoding.UTF8.GetBytes(postData);
-                request.ContentLength = byteArray.Length;
-                Stream dataStream = request.GetRequestStream();
-                dataStream.Write(byteArray, 0, byteArray.Length);
-                dataStream.Close();
-                //on créé et envoie le push
+                    string postData = "{\"type\": \"note\", \"title\": \"" + title + "\", \"body\": \"" + text + "\"}";
+                    byte[] byteArray = Encoding.UTF8.GetBytes(postData);
+                    request.ContentLength = byteArray.Length;
+                    Stream dataStream = request.GetRequestStream();
+                    dataStream.Write(byteArray, 0, byteArray.Length);
+                    dataStream.Close();
+                    //on créé et envoie le push
 
-                WebResponse response = request.GetResponse();
-                dataStream = response.GetResponseStream();
-                StreamReader reader = new StreamReader(dataStream);
-                // Read the content.
-                string responseFromServer = reader.ReadToEnd();
-                JObject master = JObject.Parse(responseFromServer);
-                string iden = master["iden"].ToString();
-                
-                //on attends quelque temps
-                System.Threading.Thread.Sleep(60000);
+                    WebResponse response = request.GetResponse();
+                    dataStream = response.GetResponseStream();
+                    StreamReader reader = new StreamReader(dataStream);
+                    // Read the content.
+                    string responseFromServer = reader.ReadToEnd();
+                    JObject master = JObject.Parse(responseFromServer);
+                    string iden = master["iden"].ToString();
 
-                //ensuite on demande de supprimer
-                WebRequest deleteReq = WebRequest.Create("https://api.pushbullet.com/v2/pushes/" + iden);
-                deleteReq.Credentials = new NetworkCredential(key, "");
-                deleteReq.Method = "DELETE";
-                WebResponse deleteResponse = deleteReq.GetResponse();
-                dataStream = deleteResponse.GetResponseStream();
-                StreamReader deleteReader = new StreamReader(dataStream);
-                string deleteResponseFromServer = reader.ReadToEnd();
-                //MessageBox.Show("Deleting " + iden + ", Response: " + deleteResponseFromServer);
+                    //on attends quelque temps
+                    System.Threading.Thread.Sleep(60000);
+
+                    //ensuite on demande de supprimer
+                    WebRequest deleteReq = WebRequest.Create("https://api.pushbullet.com/v2/pushes/" + iden);
+                    deleteReq.Credentials = new NetworkCredential(key, "");
+                    deleteReq.Method = "DELETE";
+                    WebResponse deleteResponse = deleteReq.GetResponse();
+                    dataStream = deleteResponse.GetResponseStream();
+                    StreamReader deleteReader = new StreamReader(dataStream);
+                    string deleteResponseFromServer = reader.ReadToEnd();
+                    //MessageBox.Show("Deleting " + iden + ", Response: " + deleteResponseFromServer);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("Lol, Exception while sending pushbullet: " + e.ToString());
+                }
                 
             }).Start();
 

@@ -7,6 +7,8 @@ using System.Linq;
 using System.Text;
 using Microsoft.VisualBasic.FileIO;
 using System.Globalization;
+using System.Windows.Forms;
+using Marketeering.Utilities;
 
 namespace MouseKeyboardActivityMonitor.Demo
 {
@@ -14,10 +16,10 @@ namespace MouseKeyboardActivityMonitor.Demo
     {
 
         int ROW_HEIGHT = 20;
-        int SCROLL_DELTA = 38;
-        Point WindowTop = new Point(1295, 262);
-        Point StartPoint;
+        Point BuyStartPoint;
+        Point SelltartPoint;
         Point ExportToFileLocation = new Point(2941, 1066);
+        Point ExportLocation = new Point(2171, 1067);
         Point MyOrdersLocation = new Point(2266, 0056);
         int displacement = 0;
         bool isSellOrders;
@@ -25,14 +27,12 @@ namespace MouseKeyboardActivityMonitor.Demo
 
         List<OrderElement> orders = new List<OrderElement>();
 
-        public Orders(bool isSellOrders, Point coords)
+        public Orders(Point buyOrdersStart, Point sellOrdersStart)
         {
-            this.isSellOrders = isSellOrders;
 
-            this.StartPoint = coords;
-            setupCoordinates();
+            this.BuyStartPoint = buyOrdersStart;
+            this.SelltartPoint = sellOrdersStart;
 
-            fetchOrdersList();
         }
 
         public void setupCoordinates()
@@ -40,227 +40,186 @@ namespace MouseKeyboardActivityMonitor.Demo
             //en fait ce qu'on fait ici c'est qu'on setup les emplacement des différents items
         }
 
-        public void fetchOrdersList()
+        public void fetchMyOrders()
         {
-            double lastOrderCurrentPrice = 0;
-            int index = 0;
-            double orderAmmount = getOrderAmmountForSpecificElement(index);
-            //si on a un 0, ça veux dire que c'est vide!
-            if (orderAmmount < 0.01)
-                return;
-            orders.Add(new OrderElement(orderAmmount, isSellOrders));
+            //on va commencer par exporter les données des orders en cliquant sur le bouton
+            Automation.I.mouseClick(ExportLocation);
+            System.Threading.Thread.Sleep(2000);
 
-            //on va aller lire tout les montants de vente
-            while (orderAmmount != lastOrderCurrentPrice && orderAmmount > 0.0 && index < 10)
-            {
-                index++;
-                lastOrderCurrentPrice = orderAmmount;
-                orderAmmount = getOrderAmmountForSpecificElement(index);
-                if (orderAmmount != lastOrderCurrentPrice && orderAmmount > 0)
-                {
-                    orders.Add(new OrderElement(orderAmmount, isSellOrders));
-                }
-            }
-        }
-
-        public void updateSales()
-        {
-            for (int i = 0; i < orders.Count(); i++)
-            {
-                while (!updateSale(i))
-                {
-                    //on enleve l'élément en trop et on recommence
-                    orders.RemoveAt(i);
-                }
-            }
-            return;
-        }
-
-        public bool updateSale(int element)
-        {
-            //on va commencer par aller voir combien on met comme montant
-            exportOrdersForSpecificElement(element);
-
-            double newPrice = orders.ElementAt(element).getUpdatedPrice();
-            //MessageBox.Show("nouveau prix proposé: " + newPrice);
-
-            modifyOrderSpecificElement(element);
-
-            //avant, on va aller voir si le prix est le même que celui en memoire, si non ça veux dire que cet item à terminé d'être vendu, on le supprime
-            Automation.I.Copy();
-            var currentValue = double.Parse(Automation.I.GetClipboard());
-
-            if (Math.Abs(currentValue - orders.ElementAt(element).orderAmmount) > 0.005)
-            {
-                allSoldIndexes.Add(element);
-                return false;
-            }
-
-            if (newPrice > 0)
-            {
-                Automation.I.Send(newPrice.ToString().Replace(',', '.'));
-                Automation.I.Send("{Tab}");
-                Automation.I.Send("{Enter}");
-                Automation.I.Send("{Tab}");
-                Automation.I.Send("{Enter}");
-                orders.ElementAt(element).orderAmmount = newPrice;
-            }
-            else
-            {
-                Automation.I.Send("{Tab}");
-                Automation.I.Send("{Tab}");
-                Automation.I.Send("{Enter}");
-            }
-            return true;
-            //exportOrdersForSpecificElement(element);
-        }
-
-        public int CalculateElementPosition(int element)
-        {
-            int relativeElementLocation = ROW_HEIGHT/2 + ROW_HEIGHT*element;
-            //MessageBox.Show("currentClick.Y: " + currentClick.Y + ", MAX: " + (this.WINDOW.Y + this.START_POINT.Y));
-            //on va aller voir si ce clique serait à l'extérieur de la liste, si oui on va scroll down
-            while (relativeElementLocation < displacement || relativeElementLocation > displacement + WindowTop.Y)
-            {
-                //le cas ou cet élément est en haut
-                if (relativeElementLocation < displacement)
-                {
-                    //si il est en haut, on réduit le déplacement
-                    reduceDisplacement();
-                }
-                else if (relativeElementLocation > displacement + WindowTop.Y)
-                {
-                    augmentDisplacement();
-                }
-            }
-
-            return relativeElementLocation - displacement;
-        }
-
-        public void reduceDisplacement()
-        {
-            Automation.I.mouseClick(new Point(StartPoint.X + WindowTop.X - 5, StartPoint.Y + 5));
-            displacement -= SCROLL_DELTA;
-        }
-
-        public void augmentDisplacement()
-        {
-            Automation.I.mouseClick(new Point(StartPoint.X + WindowTop.X - 5, StartPoint.Y + WindowTop.Y - 5));
-            displacement += SCROLL_DELTA;
-        }
-
-        public void leftClickSpecificElement(int element)
-        {
-            //Automation.mouseMove(START_POINT);
-            int locationInWindow = CalculateElementPosition(element);
-            Automation.I.mouseClick(new Point(StartPoint.X + 5, StartPoint.Y + locationInWindow));
-        }
-
-        public void modifyOrderSpecificElement(int element)
-        {
-            int locationInWindow = CalculateElementPosition(element);
-            Automation.I.mouseClick(new Point(StartPoint.X + 5, StartPoint.Y + locationInWindow));
-            Automation.I.rightMouseClick(new Point(StartPoint.X + 5, StartPoint.Y + locationInWindow));
-            Automation.I.mouseClick(new Point(StartPoint.X + 25, StartPoint.Y + locationInWindow + 5));
-        }
-        public void exportMarketForSpecificElement(int element)
-        {
-            int locationInWindow = CalculateElementPosition(element);
-            Automation.I.mouseClick(new Point(StartPoint.X + 5, StartPoint.Y + locationInWindow));
-            Automation.I.rightMouseClick(new Point(StartPoint.X + 5, StartPoint.Y + locationInWindow));
-            Automation.I.mouseClick(new Point(StartPoint.X + 25, StartPoint.Y + locationInWindow + 60));
-            System.Threading.Thread.Sleep(3000);
-            Automation.I.mouseClick(ExportToFileLocation);
-            System.Threading.Thread.Sleep(1000);
-            Automation.I.mouseClick(MyOrdersLocation);
-            System.Threading.Thread.Sleep(1000);
-        }
-
-        public void leftClickOnEachElements(){
-
-            Point currentClick = new Point(this.StartPoint.X + 10, this.StartPoint.Y + ROW_HEIGHT / 2);
-            Automation.I.mouseClick(currentClick);
-            while (currentClick.Y < (this.WindowTop.Y+this.StartPoint.Y))
-            {
-                Automation.I.mouseMove(new Point(100, 100));
-                currentClick.Y += this.ROW_HEIGHT;
-                //MessageBox.Show("X: " + currentClick.X + ", Y: " + currentClick.Y);
-                Automation.I.mouseClick(currentClick);
-            }
-        }
-
-        public void exportOrdersForSpecificElement(int element)
-        {
-            exportMarketForSpecificElement(element);
-            //return;
-            //TODO: Export to file
+            //ensuite on importe les commandes
             var directory = new DirectoryInfo("C:\\Users\\Stéphane\\Documents\\EVE\\logs\\Marketlogs");
-            var myFile = directory.GetFiles()
+            var myOrdersFile = directory.GetFiles()
                          .OrderByDescending(f => f.LastWriteTime)
                          .First();
-            TextFieldParser parser = new TextFieldParser(myFile.FullName);
+            TextFieldParser parser = new TextFieldParser(myOrdersFile.FullName);
             parser.TextFieldType = FieldType.Delimited;
             parser.SetDelimiters(",");
             int index = 0;
-            List<ObjectOtherOrders> toSend = new List<ObjectOtherOrders>();
+            orders = new List<OrderElement>();
             while (!parser.EndOfData)
             {
                 string[] fields = parser.ReadFields();
                 if (index != 0)
                 {
-                    var otherOrderToAdd = new ObjectOtherOrders();
-                    otherOrderToAdd.price = double.Parse(fields[0], CultureInfo.InvariantCulture);
-                    otherOrderToAdd.volumeRemaining = (int)double.Parse(fields[1], CultureInfo.InvariantCulture);
-                    otherOrderToAdd.typeId = int.Parse(fields[2]);
-                    otherOrderToAdd.range = int.Parse(fields[3]);
-                    otherOrderToAdd.orderId = fields[4];
-                    otherOrderToAdd.totalVolume = int.Parse(fields[5]);
-                    otherOrderToAdd.minimumVolume = int.Parse(fields[6]);
-                    otherOrderToAdd.bid = bool.Parse(fields[7]);
-                    otherOrderToAdd.issueDate = DateTime.Parse(fields[8]);
-                    otherOrderToAdd.duration = int.Parse(fields[9]);
-                    otherOrderToAdd.stationId = int.Parse(fields[10]);
-                    otherOrderToAdd.regionId = int.Parse(fields[11]);
-                    otherOrderToAdd.solarSystemId = int.Parse(fields[12]);
-                    otherOrderToAdd.jumps = int.Parse(fields[13]);
-                    toSend.Add(otherOrderToAdd);
+                    OrderElement toAdd = new OrderElement(double.Parse(fields[10], CultureInfo.InvariantCulture), bool.Parse(fields[9]));
+                    toAdd.orderId = fields[0];
+                    orders.Add(toAdd);
                 }
                 index++;
-                //Process row
-                foreach (string field in fields)
-                {
-                    //MessageBox.Show("field: " + field);
-                    //TODO: Process field
-                }
             }
-            orders.ElementAt(element).addOrderData(toSend);
             parser.Close();
+            File.Delete(myOrdersFile.FullName);
+
         }
 
-        public double getOrderAmmountForSpecificElement(int element)
+        public void updateSales()
         {
-            //avant tout, on va vider le clipboard
-            Automation.I.EmptyClipboard();
-            
-            modifyOrderSpecificElement(element);
+            clearFolder();
+            fetchMyOrders();
 
+            updateSaleType("sell");
+            updateSaleType("buy");
+        }
+
+        public void updateSaleType(string type){
+            int index = 0;
+            List<ObjectOtherOrders> buyOrderData = fetchOrderData(type, index);
+            while (buyOrderData != null && buyOrderData.Count > 0)
+            {
+                //on va aller voir à laquelle de nos commandes ça correspond
+                OrderElement myOrderForThisItem = orders.Where(o => (buyOrderData.Where(bod => bod.orderId == o.orderId && bod.bid == (type == "buy")).Count()) > 0).First();
+                double newPrice = myOrderForThisItem.getUpdatedPrice(buyOrderData);
+
+                if (newPrice > 0)
+                {
+                    //MessageBox.Show("Présent Montant: "+ myOrderForThisItem.orderAmmount.ToString() + " Montant: " + newPrice.ToString());
+                    modifyOrderSpecificElement(type, index, newPrice, myOrderForThisItem.orderAmmount);
+                }
+                index++;
+                buyOrderData = fetchOrderData(type, index);
+            }
+            //on 
+            return;
+        }
+
+        public void modifyOrderSpecificElement(string orderType, int element, double newOrderPrice, double verificationPrice)
+        {
+
+            Point startingPoing;
+            if(orderType == "buy"){
+                startingPoing = BuyStartPoint;
+            }else{
+
+                startingPoing = SelltartPoint;
+            }
+
+            Automation.I.mouseClick(new Point(startingPoing.X + 20, startingPoing.Y + element * ROW_HEIGHT + ROW_HEIGHT / 2));
+            Automation.I.rightMouseClick(new Point(startingPoing.X + 5, startingPoing.Y + element * ROW_HEIGHT + ROW_HEIGHT / 2));
+            Automation.I.mouseClick(new Point(startingPoing.X + 25, startingPoing.Y + element * ROW_HEIGHT + ROW_HEIGHT / 2 + 5));
+
+            //on va vérifier si le montant est vraiment celui que l'on pense
             Automation.I.Copy();
+            System.Threading.Thread.Sleep(500);
+            string clip = Automation.I.GetClipboard();
 
-            //MessageBox.Show("cb: " + Clipboard.GetText());
-            string cbString = Automation.I.GetClipboard();
-            double toReturn = 0;
+            if (Math.Abs(Double.Parse(clip)- verificationPrice) > 0.01)
+            {
+                Notifier.I.SendMessage("ERREUR Marketeering", "Cette valeur (" + clip + ") n'est pas celle à laquelle on s'attendais: " + verificationPrice);
+                //MessageBox.Show("Cette valeur (" + clip + ") n'est pas celle à laquelle on s'attendais: " + verificationPrice);
+                Automation.I.Send("{Tab}");
+                Automation.I.Send("{Tab}");
+                Automation.I.Send("{Enter}");
+                return;
+            }
+
+
+            Automation.I.Send(newOrderPrice.ToString().Replace(',', '.'));
+            Automation.I.Send("{Tab}");
+            Automation.I.Send("{Enter}");
+            Automation.I.Send("{Tab}");
+            Automation.I.Send("{Enter}");
+        }
+
+        public void clearFolder()
+        {
+            System.IO.DirectoryInfo downloadedMessageInfo = new DirectoryInfo("C:\\Users\\Stéphane\\Documents\\EVE\\logs\\Marketlogs");
+
+            foreach (FileInfo file in downloadedMessageInfo.GetFiles())
+            {
+                file.Delete();
+            }
+        }
+
+        public List<ObjectOtherOrders> fetchOrderData(string orderType, int element)
+        {
+            Point startingPoing;
+            if(orderType == "buy"){
+                startingPoing = BuyStartPoint;
+            }else{
+
+                startingPoing = SelltartPoint;
+            }
+
+            Automation.I.mouseClick(new Point(startingPoing.X + 5, startingPoing.Y + element * ROW_HEIGHT + ROW_HEIGHT / 2));
+            Automation.I.rightMouseClick(new Point(startingPoing.X + 5, startingPoing.Y + element * ROW_HEIGHT + ROW_HEIGHT / 2));
+            Automation.I.mouseClick(new Point(startingPoing.X + 25, startingPoing.Y + element * ROW_HEIGHT + ROW_HEIGHT / 2 + 60));
+            System.Threading.Thread.Sleep(3000);
+            Automation.I.mouseClick(ExportToFileLocation);
+            System.Threading.Thread.Sleep(1000);
+            Automation.I.mouseClick(MyOrdersLocation);
+            System.Threading.Thread.Sleep(1000);
+
+            //on va aller lire le ficher exporter
+            var directory = new DirectoryInfo("C:\\Users\\Stéphane\\Documents\\EVE\\logs\\Marketlogs");
             try
             {
-                toReturn = double.Parse(cbString);
+                var myFile = directory.GetFiles()
+                             .OrderByDescending(f => f.LastWriteTime)
+                             .First();
+                //si le fichier est vieux, on retourne null
+                if(myFile.LastWriteTime < DateTime.Now.AddSeconds(-5)){
+                    return null;
+                }
+                TextFieldParser parser = new TextFieldParser(myFile.FullName);
+                parser.TextFieldType = FieldType.Delimited;
+                parser.SetDelimiters(",");
+                int index = 0;
+                List<ObjectOtherOrders> toSend = new List<ObjectOtherOrders>();
+                while (!parser.EndOfData)
+                {
+                    string[] fields = parser.ReadFields();
+                    if (index != 0)
+                    {
+                        var otherOrderToAdd = new ObjectOtherOrders();
+                        otherOrderToAdd.price = double.Parse(fields[0], CultureInfo.InvariantCulture);
+                        otherOrderToAdd.volumeRemaining = (int)double.Parse(fields[1], CultureInfo.InvariantCulture);
+                        otherOrderToAdd.typeId = int.Parse(fields[2]);
+                        otherOrderToAdd.range = int.Parse(fields[3]);
+                        otherOrderToAdd.orderId = fields[4];
+                        otherOrderToAdd.totalVolume = int.Parse(fields[5]);
+                        otherOrderToAdd.minimumVolume = int.Parse(fields[6]);
+                        otherOrderToAdd.bid = bool.Parse(fields[7]);
+                        otherOrderToAdd.issueDate = DateTime.Parse(fields[8]);
+                        otherOrderToAdd.duration = int.Parse(fields[9]);
+                        otherOrderToAdd.stationId = int.Parse(fields[10]);
+                        otherOrderToAdd.regionId = int.Parse(fields[11]);
+                        otherOrderToAdd.solarSystemId = int.Parse(fields[12]);
+                        otherOrderToAdd.jumps = int.Parse(fields[13]);
+                        toSend.Add(otherOrderToAdd);
+                    }
+                    index++;
+                }
+                parser.Close();
+                File.Delete(myFile.FullName);
+
+                return toSend;
             }
-            catch
+            catch(Exception e)
             {
-                return 0;
+                //si on n'as pas pu exporter parce que cet élément n'existe pas...
+                return null;
             }
 
-            Automation.I.Send("{Tab 2}");
-            Automation.I.Send("{Enter}");
-            return toReturn;
         }
 
     }
