@@ -18,9 +18,9 @@ namespace MouseKeyboardActivityMonitor.Demo
         int ROW_HEIGHT = 20;
         Point BuyStartPoint;
         Point SelltartPoint;
-        Point ExportToFileLocation = new Point(2941, 1066);
-        Point ExportLocation = new Point(2171, 1067);
-        Point MyOrdersLocation = new Point(2266, 0056);
+        Point ExportToFileLocation = new Point(1023, 1028);
+        Point ExportLocation = new Point(264, 1027);
+        Point MyOrdersLocation = new Point(358, 57);
         int displacement = 0;
         bool isSellOrders;
         List<int> allSoldIndexes = new List<int>();
@@ -44,7 +44,7 @@ namespace MouseKeyboardActivityMonitor.Demo
         {
             //on va commencer par exporter les données des orders en cliquant sur le bouton
             Automation.I.mouseClick(ExportLocation);
-            System.Threading.Thread.Sleep(2000);
+            Automation.I.waitAWhile();
 
             //ensuite on importe les commandes
             var directory = new DirectoryInfo("C:\\Users\\Stéphane\\Documents\\EVE\\logs\\Marketlogs");
@@ -96,6 +96,7 @@ namespace MouseKeyboardActivityMonitor.Demo
                     modifyOrderSpecificElement(type, index, newPrice, myOrderForThisItem.orderAmmount);
                 }
                 index++;
+                Automation.I.waitAWhile();
                 buyOrderData = fetchOrderData(type, index);
             }
             //on 
@@ -119,12 +120,23 @@ namespace MouseKeyboardActivityMonitor.Demo
 
             //on va vérifier si le montant est vraiment celui que l'on pense
             Automation.I.Copy();
-            System.Threading.Thread.Sleep(500);
+            Automation.I.waitALittle();
             string clip = Automation.I.GetClipboard();
 
-            if (Math.Abs(Double.Parse(clip)- verificationPrice) > 0.01)
+            Double clipDouble = 0.0;
+
+            try
             {
-                Notifier.I.SendMessage("ERREUR Marketeering", "Cette valeur (" + clip + ") n'est pas celle à laquelle on s'attendais: " + verificationPrice);
+                clipDouble = Double.Parse(clip);
+            }
+            catch (Exception e)
+            {
+
+            }
+
+            if (Math.Abs(clipDouble - verificationPrice) > 0.01)
+            {
+                //Notifier.I.SendMessage("ERREUR Marketeering", "Cette valeur (" + clip + ") n'est pas celle à laquelle on s'attendais: " + verificationPrice);
                 //MessageBox.Show("Cette valeur (" + clip + ") n'est pas celle à laquelle on s'attendais: " + verificationPrice);
                 Automation.I.Send("{Tab}");
                 Automation.I.Send("{Tab}");
@@ -134,10 +146,12 @@ namespace MouseKeyboardActivityMonitor.Demo
 
 
             Automation.I.Send(newOrderPrice.ToString().Replace(',', '.'));
+            Automation.I.waitALittle();
             Automation.I.Send("{Tab}");
             Automation.I.Send("{Enter}");
             Automation.I.Send("{Tab}");
             Automation.I.Send("{Enter}");
+            Automation.I.waitALittle();
         }
 
         public void clearFolder()
@@ -160,14 +174,16 @@ namespace MouseKeyboardActivityMonitor.Demo
                 startingPoing = SelltartPoint;
             }
 
-            Automation.I.mouseClick(new Point(startingPoing.X + 5, startingPoing.Y + element * ROW_HEIGHT + ROW_HEIGHT / 2));
-            Automation.I.rightMouseClick(new Point(startingPoing.X + 5, startingPoing.Y + element * ROW_HEIGHT + ROW_HEIGHT / 2));
-            Automation.I.mouseClick(new Point(startingPoing.X + 25, startingPoing.Y + element * ROW_HEIGHT + ROW_HEIGHT / 2 + 60));
-            System.Threading.Thread.Sleep(3000);
+            //Automation.I.mouseClick(new Point(startingPoing.X + 10, startingPoing.Y + element * ROW_HEIGHT + ROW_HEIGHT / 2));
+            Automation.I.waitALittle();
+            Automation.I.rightMouseClick(new Point(startingPoing.X + 10, startingPoing.Y + element * ROW_HEIGHT + ROW_HEIGHT / 2));
+            Automation.I.waitALittle();
+            Automation.I.mouseClick(new Point(startingPoing.X + 40, startingPoing.Y + element * ROW_HEIGHT + ROW_HEIGHT / 2 + 60));
+            Automation.I.waitALittle();
             Automation.I.mouseClick(ExportToFileLocation);
-            System.Threading.Thread.Sleep(1000);
+            Automation.I.waitAWhile();
             Automation.I.mouseClick(MyOrdersLocation);
-            System.Threading.Thread.Sleep(1000);
+            Automation.I.waitALongTime();
 
             //on va aller lire le ficher exporter
             var directory = new DirectoryInfo("C:\\Users\\Stéphane\\Documents\\EVE\\logs\\Marketlogs");
@@ -177,7 +193,7 @@ namespace MouseKeyboardActivityMonitor.Demo
                              .OrderByDescending(f => f.LastWriteTime)
                              .First();
                 //si le fichier est vieux, on retourne null
-                if(myFile.LastWriteTime < DateTime.Now.AddSeconds(-5)){
+                if(myFile.LastWriteTime < DateTime.Now.AddSeconds((int)(-10 * Automation.I.lagMultiplicator))){
                     return null;
                 }
                 TextFieldParser parser = new TextFieldParser(myFile.FullName);
