@@ -32,7 +32,7 @@ namespace Marketeering
                 while (true)
                 {
                     DateTime startTime = DateTime.Now;
-                    int milisecsDeltaTime = 60000 * 5 + rnd.Next(1, 60000);
+                    int milisecsDeltaTime = 60000 * 5 + rnd.Next(1, 120000);
 
                     DateTime nextTime = startTime.AddMilliseconds(milisecsDeltaTime);
                     Notifier.I.Notify("Marketeering", "Phase commencée à " + startTime.ToShortTimeString() + ", Prochaine phase à " + nextTime.ToShortTimeString(), milisecsDeltaTime);
@@ -58,6 +58,11 @@ namespace Marketeering
         private void button2_Click(object sender, EventArgs e)
         {
             botThread.Abort();
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("Lol, u dumb m8?");
         }
     }
 }

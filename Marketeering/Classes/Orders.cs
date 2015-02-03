@@ -160,7 +160,20 @@ namespace MouseKeyboardActivityMonitor.Demo
 
             foreach (FileInfo file in downloadedMessageInfo.GetFiles())
             {
-                file.Delete();
+                var done = false;
+                var loop = 0;
+                while (loop < 5 && !done)
+                {
+                    try
+                    {
+                        file.Delete();
+                        done = true;
+                    }
+                    catch
+                    {
+                        loop++;
+                    }
+                }
             }
         }
 
