@@ -7,6 +7,7 @@ namespace MouseKeyboardActivityMonitor.Demo.Classes
 {
     class ObjectOtherOrders
     {
+        public string objName;
         public double price;
         public int volumeRemaining;
         public int typeId;
