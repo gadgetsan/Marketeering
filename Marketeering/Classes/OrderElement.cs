@@ -40,7 +40,7 @@ namespace MouseKeyboardActivityMonitor.Demo.Classes
                 }
             }
             //si la différence est plus grande que 5%, on ne le fait pas
-            if (Math.Abs(orderAmmount - proposedPrice) / orderAmmount > 0.05)
+            if ((Math.Abs(orderAmmount - proposedPrice) / orderAmmount > 0.20 && isSellOrder)  || (Math.Abs(orderAmmount - proposedPrice) / orderAmmount > 0.05 && !isSellOrder))
             {
                 proposedPrice = 0;
             }
