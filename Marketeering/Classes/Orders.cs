@@ -55,7 +55,8 @@ namespace MouseKeyboardActivityMonitor.Demo
             parser.TextFieldType = FieldType.Delimited;
             parser.SetDelimiters(",");
             int index = 0;
-            orders = new List<OrderElement>();
+            List<OrderElement> oldOrders = orders;
+            List<OrderElement> newOrders = new List<OrderElement>();
             while (!parser.EndOfData)
             {
                 string[] fields = parser.ReadFields();
@@ -63,10 +64,33 @@ namespace MouseKeyboardActivityMonitor.Demo
                 {
                     OrderElement toAdd = new OrderElement(double.Parse(fields[10], CultureInfo.InvariantCulture), bool.Parse(fields[9]));
                     toAdd.orderId = fields[0];
-                    orders.Add(toAdd);
+                    toAdd.typeId = fields[1];
+                    toAdd.charId = fields[2];
+                    toAdd.charName = fields[3];
+                    toAdd.regionId = fields[4];
+                    toAdd.regionName = fields[5];
+                    toAdd.stationId = fields[6];
+                    toAdd.stationName = fields[7];
+                    toAdd.range = int.Parse(fields[8]);
+                    toAdd.volumeEntered = int.Parse(fields[11]);
+                    toAdd.volumeRemaining = double.Parse(fields[12]);
+                    toAdd.issueDate = DateTime.Parse(fields[13]);
+                    toAdd.orderState = fields[14];
+                    toAdd.minVolume = int.Parse(fields[15]);
+                    toAdd.accountId = fields[16];
+                    toAdd.duration = int.Parse(fields[17]);
+                    toAdd.isCorp = bool.Parse(fields[18]);
+                    toAdd.solarSystemId = fields[19];
+                    toAdd.solarSystemName = fields[20];
+                    toAdd.escrow = double.Parse(fields[21]);
+                    newOrders.Add(toAdd);
                 }
                 index++;
             }
+
+            compareOrders(oldOrders, newOrders);
+
+            orders = newOrders;
             parser.Close();
             File.Delete(myOrdersFile.FullName);
 
@@ -210,6 +234,9 @@ namespace MouseKeyboardActivityMonitor.Demo
                     return null;
                 }
                 TextFieldParser parser = new TextFieldParser(myFile.FullName);
+
+                string objectName = myFile.FullName.Split('/').Last().Split('-')[1];
+
                 parser.TextFieldType = FieldType.Delimited;
                 parser.SetDelimiters(",");
                 int index = 0;
@@ -220,6 +247,7 @@ namespace MouseKeyboardActivityMonitor.Demo
                     if (index != 0)
                     {
                         var otherOrderToAdd = new ObjectOtherOrders();
+                        otherOrderToAdd.objName = objectName;
                         otherOrderToAdd.price = double.Parse(fields[0], CultureInfo.InvariantCulture);
                         otherOrderToAdd.volumeRemaining = (int)double.Parse(fields[1], CultureInfo.InvariantCulture);
                         otherOrderToAdd.typeId = int.Parse(fields[2]);
@@ -247,6 +275,68 @@ namespace MouseKeyboardActivityMonitor.Demo
             {
                 //si on n'as pas pu exporter parce que cet élément n'existe pas...
                 return null;
+            }
+
+        }
+
+        private void compareOrders(List<OrderElement> older, List<OrderElement> newer){
+            //ce qu'on va faire c'est que pour chaque vieille commande, on va aller voir les nouvelles et on va voir si il y a une différence de quantité
+
+            foreach (OrderElement olderOrder in older)
+            {
+                string objName = olderOrder.latestExportedData.First().objName;
+                bool foundNewer = false;
+                foreach (OrderElement newerOrder in newer)
+                {
+                    if (olderOrder.orderId == newerOrder.orderId)
+                    {
+                        foundNewer = true;
+                        if (olderOrder.volumeRemaining != newerOrder.volumeRemaining)
+                        {
+                            string text = "";
+                            string title = "";
+                            if(olderOrder.isSellOrder){
+                                //on en a vendu!
+                                text += "Vente de ";
+                                title = "Marketeering Vente";
+                                
+                            }else{
+                                //on en a acheté!
+                                text += "Achat de ";
+                                title = "Marketeering Achat";
+                            }
+                            text += (newerOrder.volumeRemaining - olderOrder.volumeRemaining).ToString() + " ";
+                            text += objName + " ";
+                            text += "au cout total de " + ((newerOrder.volumeRemaining - olderOrder.volumeRemaining) * olderOrder.orderAmmount).ToString();
+                            Notifier.I.Notify(title, text, 60000 * 5);
+                        }
+                        //on va aller voir si on a une différrence dans les quantité en vente
+                        break;
+                    }
+                }
+                if (!foundNewer)
+                {
+                    //cette commande à été entièrement venudu / acheté;
+                    string text = "";
+                    string title = "";
+                    if (olderOrder.isSellOrder)
+                    {
+                        //on en a vendu!
+                        text += "Vente de ";
+                        title = "Marketeering Vente";
+
+                    }
+                    else
+                    {
+                        //on en a acheté!
+                        text += "Achat de ";
+                        title = "Marketeering Achat";
+                    }
+                    text += (olderOrder.volumeRemaining).ToString() + " ";
+                    text += objName + " ";
+                    text += "au cout total de " + ((olderOrder.volumeRemaining) * olderOrder.orderAmmount).ToString();
+                    Notifier.I.Notify(title, text, 60000 * 5);
+                }
             }
 
         }

@@ -12,6 +12,25 @@ namespace MouseKeyboardActivityMonitor.Demo.Classes
         public double orderAmmount;
         public List<ObjectOtherOrders> latestExportedData;
         public string orderId;
+        public string typeId;
+        public string charId;
+        public string charName;
+        public string regionId;
+        public string regionName;
+        public string stationId;
+        public string stationName;
+        public int range;
+        public int volumeEntered;
+        public double volumeRemaining;
+        public DateTime issueDate;
+        public String orderState;
+        public int minVolume;
+        public string accountId;
+        public int duration;
+        public bool isCorp;
+        public string solarSystemId;
+        public string solarSystemName;
+        public double escrow; 
 
         public OrderElement(double currentAmmount, bool isBuyOrder)
         {
