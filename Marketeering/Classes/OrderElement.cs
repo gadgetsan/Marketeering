@@ -12,6 +12,25 @@ namespace MouseKeyboardActivityMonitor.Demo.Classes
         public double orderAmmount;
         public List<ObjectOtherOrders> latestExportedData;
         public string orderId;
+        public string typeId;
+        public string charId;
+        public string charName;
+        public string regionId;
+        public string regionName;
+        public string stationId;
+        public string stationName;
+        public int range;
+        public int volumeEntered;
+        public double volumeRemaining;
+        public DateTime issueDate;
+        public String orderState;
+        public int minVolume;
+        public string accountId;
+        public int duration;
+        public bool isCorp;
+        public string solarSystemId;
+        public string solarSystemName;
+        public double escrow; 
 
         public OrderElement(double currentAmmount, bool isBuyOrder)
         {
@@ -50,9 +69,9 @@ namespace MouseKeyboardActivityMonitor.Demo.Classes
 
                 //on regarde si le profit < 10%
                 if (((lowestSellPrice.price - highestBuyPrice.price) / highestBuyPrice.price) < 0.1)
-                {
-                    proposedPrice = 0;
-                }
+            {
+                proposedPrice = 0;
+            }
             }
             return proposedPrice;
         }
