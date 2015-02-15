@@ -32,10 +32,10 @@ namespace Marketeering
                 while (true)
                 {
                     DateTime startTime = DateTime.Now;
-                    int milisecsDeltaTime = 60000 * 5 + rnd.Next(1, 120000);
+                    int milisecsDeltaTime = 61000 * 5 + rnd.Next(1, 120000);
 
                     DateTime nextTime = startTime.AddMilliseconds(milisecsDeltaTime);
-                    Notifier.I.Notify("Marketeering", "Phase commencée à " + startTime.ToShortTimeString() + ", Prochaine phase à " + nextTime.ToShortTimeString(), milisecsDeltaTime);
+                    //Notifier.I.Notify("Marketeering", "Phase commencée à " + startTime.ToShortTimeString() + ", Prochaine phase à " + nextTime.ToShortTimeString(), milisecsDeltaTime);
                     Orders.updateSales();
 
                     DateTime newCurrentTime = DateTime.Now;

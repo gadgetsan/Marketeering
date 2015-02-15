@@ -40,6 +40,7 @@ namespace MouseKeyboardActivityMonitor.Demo.Classes
 
         public double getUpdatedPrice(List<ObjectOtherOrders> latestExportedData)
         {
+            this.latestExportedData = latestExportedData;
             double proposedPrice = 0;
             //on va ordonner les données importés pour avoir seulement ceux de la station (Jita)
             if(isSellOrder){

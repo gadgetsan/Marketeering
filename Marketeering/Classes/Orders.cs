@@ -26,6 +26,7 @@ namespace MouseKeyboardActivityMonitor.Demo
         List<int> allSoldIndexes = new List<int>();
 
         List<OrderElement> orders = new List<OrderElement>();
+        List<OrderElement> oldOrders = new List<OrderElement>();
 
         public Orders(Point buyOrdersStart, Point sellOrdersStart)
         {
@@ -55,7 +56,6 @@ namespace MouseKeyboardActivityMonitor.Demo
             parser.TextFieldType = FieldType.Delimited;
             parser.SetDelimiters(",");
             int index = 0;
-            List<OrderElement> oldOrders = orders;
             List<OrderElement> newOrders = new List<OrderElement>();
             while (!parser.EndOfData)
             {
@@ -73,7 +73,7 @@ namespace MouseKeyboardActivityMonitor.Demo
                     toAdd.stationName = fields[7];
                     toAdd.range = int.Parse(fields[8]);
                     toAdd.volumeEntered = int.Parse(fields[11]);
-                    toAdd.volumeRemaining = double.Parse(fields[12]);
+                    toAdd.volumeRemaining = double.Parse(fields[12], CultureInfo.InvariantCulture);
                     toAdd.issueDate = DateTime.Parse(fields[13]);
                     toAdd.orderState = fields[14];
                     toAdd.minVolume = int.Parse(fields[15]);
@@ -82,16 +82,15 @@ namespace MouseKeyboardActivityMonitor.Demo
                     toAdd.isCorp = bool.Parse(fields[18]);
                     toAdd.solarSystemId = fields[19];
                     toAdd.solarSystemName = fields[20];
-                    toAdd.escrow = double.Parse(fields[21]);
+                    toAdd.escrow = double.Parse(fields[21], CultureInfo.InvariantCulture);
                     newOrders.Add(toAdd);
                 }
                 index++;
             }
-
-            compareOrders(oldOrders, newOrders);
-
+            oldOrders = orders;
             orders = newOrders;
             parser.Close();
+            Automation.I.waitAWhile();
             File.Delete(myOrdersFile.FullName);
 
         }
@@ -103,6 +102,8 @@ namespace MouseKeyboardActivityMonitor.Demo
 
             updateSaleType("sell");
             updateSaleType("buy");
+
+            compareOrders();
         }
 
         public void updateSaleType(string type){
@@ -267,6 +268,7 @@ namespace MouseKeyboardActivityMonitor.Demo
                     index++;
                 }
                 parser.Close();
+                Automation.I.waitAWhile();
                 File.Delete(myFile.FullName);
 
                 return toSend;
@@ -279,12 +281,24 @@ namespace MouseKeyboardActivityMonitor.Demo
 
         }
 
-        private void compareOrders(List<OrderElement> older, List<OrderElement> newer){
+        private void compareOrders(){
             //ce qu'on va faire c'est que pour chaque vieille commande, on va aller voir les nouvelles et on va voir si il y a une différence de quantité
+
+            var older = oldOrders;
+            var newer = orders;
+            if (older == null || older.Count < 1) { return; }
 
             foreach (OrderElement olderOrder in older)
             {
-                string objName = olderOrder.latestExportedData.First().objName;
+                string objName = "temp";
+                try
+                {
+                    objName = olderOrder.latestExportedData.First().objName;
+                }
+                catch (Exception e)
+                {
+                    continue;
+                }
                 bool foundNewer = false;
                 foreach (OrderElement newerOrder in newer)
                 {
@@ -305,9 +319,9 @@ namespace MouseKeyboardActivityMonitor.Demo
                                 text += "Achat de ";
                                 title = "Marketeering Achat";
                             }
-                            text += (newerOrder.volumeRemaining - olderOrder.volumeRemaining).ToString() + " ";
+                            text += (olderOrder.volumeRemaining - newerOrder.volumeRemaining).ToString() + " ";
                             text += objName + " ";
-                            text += "au cout total de " + ((newerOrder.volumeRemaining - olderOrder.volumeRemaining) * olderOrder.orderAmmount).ToString();
+                            text += "au cout total de " + ((newerOrder.volumeRemaining - olderOrder.volumeRemaining) * olderOrder.orderAmmount).ToString("C2", CultureInfo.CurrentCulture);
                             Notifier.I.Notify(title, text, 60000 * 5);
                         }
                         //on va aller voir si on a une différrence dans les quantité en vente
@@ -334,7 +348,7 @@ namespace MouseKeyboardActivityMonitor.Demo
                     }
                     text += (olderOrder.volumeRemaining).ToString() + " ";
                     text += objName + " ";
-                    text += "au cout total de " + ((olderOrder.volumeRemaining) * olderOrder.orderAmmount).ToString();
+                    text += "au cout total de " + ((olderOrder.volumeRemaining) * olderOrder.orderAmmount).ToString("C2", CultureInfo.CurrentCulture);
                     Notifier.I.Notify(title, text, 60000 * 5);
                 }
             }
