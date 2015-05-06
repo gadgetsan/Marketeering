@@ -91,7 +91,10 @@ namespace MouseKeyboardActivityMonitor.Demo
             orders = newOrders;
             parser.Close();
             Automation.I.waitAWhile();
-            File.Delete(myOrdersFile.FullName);
+            try
+            {
+                File.Delete(myOrdersFile.FullName);
+            }catch(Exception e){}
 
         }
 
@@ -216,7 +219,7 @@ namespace MouseKeyboardActivityMonitor.Demo
             Automation.I.waitALittle();
             Automation.I.rightMouseClick(new Point(startingPoing.X + 10, startingPoing.Y + element * ROW_HEIGHT + ROW_HEIGHT / 2));
             Automation.I.waitALittle();
-            Automation.I.mouseClick(new Point(startingPoing.X + 40, startingPoing.Y + element * ROW_HEIGHT + ROW_HEIGHT / 2 + 60));
+            Automation.I.mouseClick(new Point(startingPoing.X + 50, startingPoing.Y + element * ROW_HEIGHT + ROW_HEIGHT / 2 + 65));
             Automation.I.waitALittle();
             Automation.I.mouseClick(ExportToFileLocation);
             Automation.I.waitAWhile();

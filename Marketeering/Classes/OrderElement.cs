@@ -49,30 +49,30 @@ namespace MouseKeyboardActivityMonitor.Demo.Classes
                 //on regarde la différence entre les deux prix pour ne pas se faire avoir
                 if (lowestSellPrice.price < orderAmmount)
                 {
-                    proposedPrice = highestBuyPrice.price - 0.01;
+                    proposedPrice = lowestSellPrice.price - 0.01;
                 }
 
-
+                
                 //si la différence est plus grande que 5%, on ne le fait pas
                 if (Math.Abs(orderAmmount - proposedPrice) / orderAmmount > 0.05)
                 {
                     proposedPrice = 0;
                 }
+                
 
             }else{
-                ObjectOtherOrders highestPrice = latestExportedData.Where(i => i.jumps == 0 && i.bid == true).OrderByDescending(i => i.price).First();
                 //on regarde la différence entre les deux prix pour ne pas se faire avoir
-                if (highestPrice.price > orderAmmount)
+                if (highestBuyPrice.price > orderAmmount)
                 {
                     //Notifier.I.Notify()
-                    proposedPrice = highestPrice.price + 0.01;
+                    proposedPrice = highestBuyPrice.price + 0.01;
                 }
 
                 //on regarde si le profit < 10%
                 if (((lowestSellPrice.price - highestBuyPrice.price) / highestBuyPrice.price) < 0.1)
-            {
-                proposedPrice = 0;
-            }
+                {
+                    proposedPrice = 0;
+                }
             }
             return proposedPrice;
         }
