@@ -43,34 +43,66 @@ namespace MouseKeyboardActivityMonitor.Demo.Classes
             this.latestExportedData = latestExportedData;
             double proposedPrice = 0;
             //on va ordonner les données importés pour avoir seulement ceux de la station (Jita)
-            ObjectOtherOrders lowestSellPrice = latestExportedData.Where(i => i.jumps == 0 && i.bid == false).OrderBy(i => i.price).First();
-            ObjectOtherOrders highestBuyPrice = latestExportedData.Where(i => i.jumps == 0 && i.bid == true).OrderByDescending(i => i.price).First();
             if(isSellOrder){
+                ObjectOtherOrders lowestSellPrice = latestExportedData.Where(i => i.jumps == 0 && i.bid == false).OrderBy(i => i.price).First();
                 //on regarde la différence entre les deux prix pour ne pas se faire avoir
                 if (lowestSellPrice.price < orderAmmount)
                 {
-                    proposedPrice = lowestSellPrice.price - 0.01;
-                }
-
-                
-                //si la différence est plus grande que 5%, on ne le fait pas
-                if (Math.Abs(orderAmmount - proposedPrice) / orderAmmount > 0.05)
-                {
+                    //si la différence est plus grande que 5%, on ne le fait pas
+                    if (Math.Abs(orderAmmount - proposedPrice) / orderAmmount > 0.05)
+                    {
+                        proposedPrice = 0;
+                    }else{
+                        proposedPrice = lowestSellPrice.price - 0.01;
+                    }
+                }else if(latestExportedData.Where(i => i.jumps == 0 && i.bid == false).Count() > 1){
+                    //sinon si on est le plus bas, on va se raprocher du second plus bas
+                    ObjectOtherOrders secondLowestSellPrice = latestExportedData.Where(i => i.jumps == 0 && i.bid == false).OrderBy(i => i.price).ToArray()[1];
+                    if (secondLowestSellPrice.price - orderAmmount > 0.02)
+                    {
+                        proposedPrice = secondLowestSellPrice.price - 0.01;
+                    }
+                }else{                        
                     proposedPrice = 0;
                 }
-                
 
-            }else{
-                //on regarde la différence entre les deux prix pour ne pas se faire avoir
+            }
+            else
+            {
+                ObjectOtherOrders highestBuyPrice = latestExportedData.Where(i => i.jumps == 0 && i.bid == true).OrderByDescending(i => i.price).First();
+
+                //si on n'est pas le plus haut
                 if (highestBuyPrice.price > orderAmmount)
                 {
-                    //Notifier.I.Notify()
-                    proposedPrice = highestBuyPrice.price + 0.01;
+                    //on regarde si cet item est en vente aussi
+                    if (latestExportedData.Where(i => i.jumps == 0 && i.bid == false).Count() > 0)
+                    {
+                        ObjectOtherOrders lowestSellPrice = latestExportedData.Where(i => i.jumps == 0 && i.bid == false).OrderBy(i => i.price).First();
+                        //on regarde si le profit < 10% (ET cet item est en vente)
+                        if (((lowestSellPrice.price - highestBuyPrice.price) / highestBuyPrice.price) < 0.1)
+                        {
+                            proposedPrice = 0;
+                        }
+                        else
+                        {
+                            proposedPrice = highestBuyPrice.price + 0.01;
+                        }
+                    }
+                    else
+                    {
+                        //si il n'est pas en vente, on suis le marché
+                        proposedPrice = highestBuyPrice.price + 0.01;
+                    }
                 }
-
-                //on regarde si le profit < 10%
-                if (((lowestSellPrice.price - highestBuyPrice.price) / highestBuyPrice.price) < 0.1)
+                else if (latestExportedData.Where(i => i.jumps == 0 && i.bid == true).Count() > 1)
                 {
+                    //sinon, on essai de se rapprocher du 2ieme
+                    ObjectOtherOrders secondHighestBuyPrice = latestExportedData.Where(i => i.jumps == 0 && i.bid == true).OrderByDescending(i => i.price).ToArray()[1];
+                    if (orderAmmount - secondHighestBuyPrice.price > 0.02)
+                    {
+                        proposedPrice = secondHighestBuyPrice.price + 0.01;
+                    }
+                }else{
                     proposedPrice = 0;
                 }
             }
